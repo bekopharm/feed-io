@@ -24,20 +24,6 @@ class MediaRssTest extends TestCase
     const SAMPLE_FILE = 'rss/sample-youtube.xml';
 
     /**
-     * @return \FeedIo\StandardAbstract
-     */
-    public function getStandard()
-    {
-        return new Atom(new DateTimeBuilder());
-    }
-
-    public function setUp()
-    {
-        $standard = $this->getStandard();
-        $this->object = new Parser($standard, new NullLogger());
-    }
-
-    /**
      * @param $filename
      * @return Document
      */
@@ -53,14 +39,16 @@ class MediaRssTest extends TestCase
     public function testYoutubeFeed()
     {
         $document = $this->buildDomDocument(static::SAMPLE_FILE);
-        $feed = $this->object->parse($document, new Feed());
+        $standard = new Atom(new DateTimeBuilder());
+        $parser = new Parser($standard, new NullLogger());
+        $feed = $parser->parse($document, new Feed());
 
         $this->assertEquals(1, count($feed));
         foreach ($feed as $item) {
             $this->assertTrue($item->hasMedia());
             $media = $item->getMedias()->current();
-
             $this->assertInstanceOf('\FeedIo\Feed\Item\MediaInterface', $media);
+
             $this->assertEquals('YT_VIDEO_TITLE', $media->getTitle());
             $this->assertEquals('https://i2.ytimg.com/vi/YT_VIDEO_ID/hqdefault.jpg', $media->getThumbnail());
             $this->assertEquals("This is a\nmultiline\ndescription", $media->getDescription());
